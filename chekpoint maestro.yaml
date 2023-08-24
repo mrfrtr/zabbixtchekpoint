@@ -1,0 +1,104 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: 1c9621cedd8c47da81259584f22ae36b
+      template: 'CheckPoint Maestro'
+      name: 'CheckPoint Maestro'
+      description: |
+        ## Overview
+        
+        Use this template to monitor Checkpoint Maestro.
+        By MRFIRT
+  
+      groups:
+        - name: Templates
+      items:
+        - uuid: db65b5c92fa94826a09b0aa004fa4d44
+          name: Uptime
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.3.0
+          key: 'system.uptime[sysUpTime.0]'
+          trends: '0'
+          units: uptime
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+      discovery_rules:
+        - uuid: c4c8ccf9486745888bf829318e4ab402
+          name: 'Mho Interface discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFNAME},1.3.6.1.4.1.2620.1.55.1.5.1.1]'
+          key: mhointerface
+          item_prototypes:
+            - uuid: 32c204fa12e0459ba7fb6de4a48f82df
+              name: '{#IFNAME} mhoLinkState'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2620.1.55.1.5.1.3.{#SNMPINDEX}'
+              key: 'mhoLinkState[{#SNMPINDEX}]'
+              trends: '0'
+              value_type: TEXT
+            - uuid: 2d43268e168a47339c9d0c67a8942650
+              name: '{#IFNAME} mhoRxBytes'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2620.1.55.1.1.1.8.{#SNMPINDEX}'
+              key: 'mhoRxBytes[{#SNMPINDEX}]'
+              units: B
+            - uuid: 66111f5e19c745f980c65d0a1da3a9b1
+              name: '{#IFNAME} mhoTxBytes'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2620.1.55.1.2.1.8.{#SNMPINDEX}'
+              key: 'mhoTxBytes[{#SNMPINDEX}]'
+              units: B
+            - uuid: 54c3b8080fc94681acbaa173830d9d87
+              name: '{#IFNAME}RXBand'
+              type: CALCULATED
+              key: 'RXBytes[RXBytes.{#SNMPINDEX}]'
+              units: bps
+              params: '((last(//mhoRxBytes[{#SNMPINDEX}],#1) - last(//mhoRxBytes[{#SNMPINDEX}],#2)) * 8) / 60'
+            - uuid: 3388848959ee4af695c5644d4f4016da
+              name: '{#IFNAME}TXBand'
+              type: CALCULATED
+              key: 'TXBytes[TXBytes.{#SNMPINDEX}]'
+              units: bps
+              params: '((last(//mhoTxBytes[{#SNMPINDEX}],#1) - last(//mhoTxBytes[{#SNMPINDEX}],#2)) * 8) / 60'
+      valuemaps:
+        - uuid: 7602ad3113aa480e89b25953f4e2d1e5
+          name: 'Checkpoint standard status'
+          mappings:
+            - value: '0'
+              newvalue: OK
+            - value: '1'
+              newvalue: Warning
+            - value: '2'
+              newvalue: Error
+        - uuid: 010128d24068478f963d7142df5238e7
+          name: 'Fan Sensor Status'
+          mappings:
+            - value: '0'
+              newvalue: Ok
+            - value: '1'
+              newvalue: 'Out of Range'
+            - value: '2'
+              newvalue: 'Reading Error'
+        - uuid: 7165facc783b4266af79d6bc40a8d97c
+          name: 'Log Server Connection Status'
+          mappings:
+            - value: '0'
+              newvalue: Ok
+            - value: '1'
+              newvalue: Warning
+            - value: '2'
+              newvalue: 'Not Active'
+        - uuid: 5cf8be2b04584f50bf3bcd332bfb0f0a
+          name: 'Temperature Sensor Status'
+          mappings:
+            - value: '0'
+              newvalue: Ok
+            - value: '1'
+              newvalue: 'Out of Range'
+            - value: '2'
+              newvalue: 'Reading Error'
